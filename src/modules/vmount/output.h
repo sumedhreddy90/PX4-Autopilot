@@ -1,6 +1,6 @@
 /****************************************************************************
 *
-*   Copyright (c) 2016-2020 PX4 Development Team. All rights reserved.
+*   Copyright (c) 2016-2022 PX4 Development Team. All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions
@@ -31,15 +31,11 @@
 *
 ****************************************************************************/
 
-/**
- * @file output.h
- * @author Beat Küng <beat-kueng@gmx.net>
- *
- */
 
 #pragma once
 
 #include "common.h"
+#include "vmount_params.h"
 #include <drivers/drv_hrt.h>
 #include <lib/geo/geo.h>
 #include <uORB/Publication.hpp>
@@ -52,6 +48,7 @@
 namespace vmount
 {
 
+#if 0
 struct OutputConfig {
 	float gimbal_retracted_mode_value;	/**< Mixer output value for selecting gimbal retracted mode */
 	float gimbal_normal_mode_value;		/**< Mixer output value for selecting gimbal normal mode */
@@ -67,35 +64,26 @@ struct OutputConfig {
 	float roll_offset;	/**< Offset for roll channel in radians */
 	float yaw_offset;	/**< Offset for yaw channel in radians */
 
-	uint32_t mavlink_sys_id_v1;	/**< Mavlink target system id for mavlink output only for v1 */
-	uint32_t mavlink_comp_id_v1;
+	uint32_t mavlink_sysid_v1;	/**< Mavlink target system id for mavlink output only for v1 */
+	uint32_t mavlink_compid_v1;
 };
+#endif
 
 
-/**
- ** class OutputBase
- * Base class for all driver output classes
- */
 class OutputBase
 {
 public:
-	OutputBase(const OutputConfig &output_config);
+	OutputBase() = delete;
+	explicit OutputBase(const Parameters &parameters);
 	virtual ~OutputBase() = default;
 
-	virtual int initialize() { return 0; }
+	virtual void update(const ControlData &control_data) = 0;
 
-	/**
-	 * Update the output.
-	 * @param data new command if non null
-	 * @return 0 on success, <0 otherwise
-	 */
-	virtual int update(const ControlData *control_data) = 0;
+	virtual void print_status() const = 0;
 
-	/** report status to stdout */
-	virtual void print_status() = 0;
-
-	/** Publish _angle_outputs as a mount_orientation message. */
 	void publish();
+
+	void set_stabilize(bool roll_stabilize, bool pitch_stabilize, bool yaw_stabilize);
 
 protected:
 	float _calculate_pitch(double lon, double lat, float altitude,
@@ -103,15 +91,12 @@ protected:
 
 	MapProjection _projection_reference{}; ///< class to convert (lon, lat) to local [m]
 
-	const OutputConfig &_config;
+	const Parameters &_parameters;
 
 	/** set angle setpoints, speeds & stabilize flags */
-	void _set_angle_setpoints(const ControlData *control_data);
+	void _set_angle_setpoints(const ControlData &control_data);
 
-	/** check if vehicle position changed and update the setpoint angles if in gps mode */
-	void _handle_position_update(bool force_update = false);
-
-	const ControlData *_cur_control_data = nullptr;
+	void _handle_position_update(const ControlData &control_data, bool force_update = false);
 
 	float _q_setpoint[4] = { NAN, NAN, NAN, NAN }; ///< can be NAN if not specifically set
 	float _angle_velocity[3] = { NAN, NAN, NAN }; //< [rad/s], can be NAN if not specifically set

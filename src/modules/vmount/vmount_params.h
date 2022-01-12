@@ -1,6 +1,6 @@
 /****************************************************************************
 *
-*   Copyright (c) 2016 PX4 Development Team. All rights reserved.
+*   Copyright (c) 2022 PX4 Development Team. All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions
@@ -35,56 +35,57 @@
 #pragma once
 
 #include <stdint.h>
+#include <lib/parameters/param.h>
 
 namespace vmount
 {
 
-/**
- * @struct ControlData
- * This defines the common API between an input and an output of the vmount driver.
- * Each output must support the (full) set of the commands, and an input can create all
- * or a subset of the types.
- */
-struct ControlData {
-
-	enum class Type {
-		Neutral = 0,
-		Angle,
-		LonLat
-	};
-
-	union TypeData {
-		struct TypeAngle {
-			float q[4];
-			float angular_velocity[3];
-
-			enum class Frame : uint8_t {
-				AngleBodyFrame = 0, // Also called follow mode, angle relative to vehicle forward (usually default for yaw axis).
-				AngularRate = 1, // Angular rate set only.
-				AngleAbsoluteFrame = 2 // Also called lock mode, angle relative to horizon/world, lock mode. (usually default for roll and pitch).
-			} frames[3];
-		} angle;
-
-		struct TypeLonLat {
-			double lon; // longitude in deg
-			double lat; // latitude in deg
-			float altitude; // altitude in m
-			float roll_offset; // roll offset in rad
-			float pitch_offset; // pitch offset in rad
-			float yaw_offset;  // yaw offset in rad
-			float pitch_fixed_angle; // ignored if < -pi, otherwise use a fixed pitch angle instead of the altitude */
-		} lonlat;
-	} type_data;
-
-	Type type = Type::Neutral;
-
-	bool gimbal_shutter_retract = false; /**< whether to lock the gimbal (only in RC output mode) */
-
-	uint8_t sysid_primary_control = 0;
-	uint8_t compid_primary_control = 0;
-	uint8_t sysid_secondary_control = 0;
-	uint8_t compid_secondary_control = 0;
+struct Parameters {
+	int32_t mnt_mode_in;
+	int32_t mnt_mode_out;
+	int32_t mnt_mav_sysid_v1;
+	int32_t mnt_mav_compid_v1;
+	float mnt_ob_lock_mode;
+	float mnt_ob_norm_mode;
+	int32_t mnt_man_pitch;
+	int32_t mnt_man_roll;
+	int32_t mnt_man_yaw;
+	int32_t mnt_do_stab;
+	float mnt_range_pitch;
+	float mnt_range_roll;
+	float mnt_range_yaw;
+	float mnt_off_pitch;
+	float mnt_off_roll;
+	float mnt_off_yaw;
+	int32_t mav_sysid;
+	int32_t mav_compid;
+	float mnt_rate_pitch;
+	float mnt_rate_yaw;
+	int32_t mnt_rc_in_mode;
 };
 
+struct ParameterHandles {
+	param_t mnt_mode_in;
+	param_t mnt_mode_out;
+	param_t mnt_mav_sysid_v1;
+	param_t mnt_mav_compid_v1;
+	param_t mnt_ob_lock_mode;
+	param_t mnt_ob_norm_mode;
+	param_t mnt_man_pitch;
+	param_t mnt_man_roll;
+	param_t mnt_man_yaw;
+	param_t mnt_do_stab;
+	param_t mnt_range_pitch;
+	param_t mnt_range_roll;
+	param_t mnt_range_yaw;
+	param_t mnt_off_pitch;
+	param_t mnt_off_roll;
+	param_t mnt_off_yaw;
+	param_t mav_sysid;
+	param_t mav_compid;
+	param_t mnt_rate_pitch;
+	param_t mnt_rate_yaw;
+	param_t mnt_rc_in_mode;
+};
 
 } /* namespace vmount */
