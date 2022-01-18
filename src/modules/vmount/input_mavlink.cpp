@@ -109,7 +109,6 @@ InputMavlinkROI::update(unsigned int timeout_ms, ControlData &control_data, bool
 		} else if (vehicle_roi.mode == vehicle_roi_s::ROI_WPNEXT) {
 			control_data.type = ControlData::Type::LonLat;
 			_read_control_data_from_position_setpoint_sub(control_data);
-			// FIXME: where does this number come from?
 			control_data.type_data.lonlat.pitch_fixed_angle = -10.f;
 
 			control_data.type_data.lonlat.roll_offset = vehicle_roi.roll_offset;
@@ -140,13 +139,13 @@ InputMavlinkROI::update(unsigned int timeout_ms, ControlData &control_data, bool
 		if (_cur_roi_mode == vehicle_roi_s::ROI_WPNEXT) {
 			_read_control_data_from_position_setpoint_sub(control_data);
 
+			return UpdateResult::UpdatedActive;
+
 		} else { // must do an orb_copy() in *every* case
 			position_setpoint_triplet_s position_setpoint_triplet;
 			orb_copy(ORB_ID(position_setpoint_triplet), _position_setpoint_triplet_sub,
 				 &position_setpoint_triplet);
 		}
-
-		return UpdateResult::UpdatedActive;
 	}
 
 	return UpdateResult::NoUpdate;
@@ -202,7 +201,7 @@ InputMavlinkCmdMount::update(unsigned int timeout_ms, ControlData &control_data,
 
 	int poll_timeout = (int) timeout_ms;
 
-	hrt_abstime poll_start = hrt_absolute_time();
+	const hrt_abstime poll_start = hrt_absolute_time();
 
 	// If we get a command that we need to handle we exit the loop, otherwise we poll until we
 	// reach the timeout.
@@ -234,7 +233,7 @@ InputMavlinkCmdMount::update(unsigned int timeout_ms, ControlData &control_data,
 		}
 
 		// Keep going reading commands until timeout is up.
-		poll_timeout -= (hrt_absolute_time() - poll_start) / 1000;
+		poll_timeout = (hrt_absolute_time() - poll_start) / 1000;
 	}
 
 	return update_result;
@@ -316,10 +315,7 @@ InputMavlinkCmdMount::_process_command(ControlData &control_data, const vehicle_
 
 	} else if (vehicle_command.command == vehicle_command_s::VEHICLE_CMD_DO_MOUNT_CONFIGURE) {
 
-		// FIMXE: no longer supported.
-		//control_data.stabilize_axis[0] = (int)(vehicle_command.param2 + 0.5f) == 1;
-		//control_data.stabilize_axis[1] = (int)(vehicle_command.param3 + 0.5f) == 1;
-		//control_data.stabilize_axis[2] = (int)(vehicle_command.param4 + 0.5f) == 1;
+		// Stabilization params are ignored. Use MNT_DO_STAB param instead.
 
 		const int params[] = {
 			(int)((float) vehicle_command.param5 + 0.5f),
@@ -578,7 +574,7 @@ InputMavlinkGimbalV2::update(unsigned int timeout_ms, ControlData &control_data,
 			update_result = _process_set_manual_control(control_data, set_manual_control);
 		}
 
-		poll_timeout -= (hrt_absolute_time() - poll_start) / 1000;
+		poll_timeout = (hrt_absolute_time() - poll_start) / 1000;
 	}
 
 	_stream_gimbal_manager_status(control_data);
@@ -738,10 +734,7 @@ InputMavlinkGimbalV2::_process_command(ControlData &control_data, const vehicle_
 
 	} else if (vehicle_command.command == vehicle_command_s::VEHICLE_CMD_DO_MOUNT_CONFIGURE) {
 
-		// FIXME: stabilize axes no longer supported.
-		//control_data.stabilize_axis[0] = (int)(vehicle_command.param2 + 0.5f) == 1;
-		//control_data.stabilize_axis[1] = (int)(vehicle_command.param3 + 0.5f) == 1;
-		//control_data.stabilize_axis[2] = (int)(vehicle_command.param4 + 0.5f) == 1;
+		// Stabilization params are ignored. Use MNT_DO_STAB param instead.
 
 		const int params[] = {
 			(int)((float) vehicle_command.param5 + 0.5f),

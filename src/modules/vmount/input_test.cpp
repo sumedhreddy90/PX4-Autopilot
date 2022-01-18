@@ -47,7 +47,7 @@ InputTest::InputTest(Parameters &parameters) :
 
 InputTest::UpdateResult InputTest::update(unsigned int timeout_ms, ControlData &control_data, bool already_active)
 {
-	if (!_has_been_set) {
+	if (!_has_been_set.load()) {
 		return UpdateResult::NoUpdate;
 	}
 
@@ -75,7 +75,7 @@ InputTest::UpdateResult InputTest::update(unsigned int timeout_ms, ControlData &
 	control_data.sysid_primary_control = _parameters.mav_sysid;
 	control_data.compid_primary_control = _parameters.mav_compid;
 
-	_has_been_set = false;
+	_has_been_set.store(false);
 	return UpdateResult::UpdatedActive;
 }
 
@@ -98,7 +98,7 @@ void InputTest::set_test_input(int roll_deg, int pitch_deg, int yaw_deg)
 	_pitch_deg = pitch_deg;
 	_yaw_deg = yaw_deg;
 
-	_has_been_set = true;
+	_has_been_set.store(true);
 }
 
 } /* namespace vmount */

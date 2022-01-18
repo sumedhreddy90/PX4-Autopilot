@@ -34,6 +34,7 @@
 #pragma once
 
 #include "input.h"
+#include <px4_platform_common/atomic.h>
 
 namespace vmount
 {
@@ -56,7 +57,7 @@ private:
 	int _pitch_deg {0};
 	int _yaw_deg {0};
 
-	bool _has_been_set {false};
+	px4::atomic<bool> _has_been_set {false};
 };
 
 

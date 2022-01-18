@@ -149,6 +149,12 @@ static int vmount_thread_main(int argc, char *argv[])
 		}
 	}
 
+	if (alloc_failed) {
+		thread_data.input_objs_len = 0;
+		PX4_ERR("input objs memory allocation failed");
+		thread_should_exit.store(true);
+	}
+
 	for (int i = 0; i < thread_data.input_objs_len; ++i) {
 		if (thread_data.input_objs[i]->initialize() != 0) {
 			PX4_ERR("Input %d failed\n", i);
@@ -185,11 +191,9 @@ static int vmount_thread_main(int argc, char *argv[])
 	}
 
 	if (alloc_failed) {
-		thread_data.input_objs_len = 0;
-		PX4_ERR("memory allocation failed");
+		PX4_ERR("output memory allocation failed");
 		thread_should_exit.store(true);
 	}
-
 
 	while (!thread_should_exit.load()) {
 
@@ -248,9 +252,6 @@ static int vmount_thread_main(int argc, char *argv[])
 				}
 			}
 
-			// Update output
-			thread_data.output_obj->update(control_data);
-
 			if (params.mnt_do_stab == 1) {
 				thread_data.output_obj->set_stabilize(true, true, true);
 
@@ -260,6 +261,9 @@ static int vmount_thread_main(int argc, char *argv[])
 			} else {
 				thread_data.output_obj->set_stabilize(false, false, false);
 			}
+
+			// Update output
+			thread_data.output_obj->update(control_data);
 
 			// Only publish the mount orientation if the mode is not mavlink v1 or v2
 			// If the gimbal speaks mavlink it publishes its own orientation.

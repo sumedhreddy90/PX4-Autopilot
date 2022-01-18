@@ -72,18 +72,18 @@ struct ControlData {
 			float roll_offset; // roll offset in rad
 			float pitch_offset; // pitch offset in rad
 			float yaw_offset;  // yaw offset in rad
-			float pitch_fixed_angle; // ignored if < -pi, otherwise use a fixed pitch angle instead of the altitude */
+			float pitch_fixed_angle; // ignored if < -pi, otherwise use a fixed pitch angle instead of the altitude
 		} lonlat;
 	} type_data;
 
 	Type type = Type::Neutral;
 
-	bool gimbal_shutter_retract = false; /**< whether to lock the gimbal (only in RC output mode) */
+	bool gimbal_shutter_retract = false; // whether to lock the gimbal (only in RC output mode)
 
-	uint8_t sysid_primary_control = 0;
-	uint8_t compid_primary_control = 0;
-	uint8_t sysid_secondary_control = 0;
-	uint8_t compid_secondary_control = 0;
+	uint8_t sysid_primary_control = 0; // The MAVLink system ID selected to be in control, 0 for no one.
+	uint8_t compid_primary_control = 0; // The MAVLink component ID selected to be in control, 0 for no one.
+	// uint8_t sysid_secondary_control = 0; // The MAVLink system ID selected for additional input, not implemented yet.
+	// uint8_t compid_secondary_control = 0; // The MAVLink component ID selected for additional input, not implemented yet.
 };
 
 
