@@ -134,18 +134,12 @@ void OutputBase::_handle_position_update(const ControlData &control_data, bool f
 	}
 
 	vehicle_global_position_s vehicle_global_position{};
-	vehicle_local_position_s vehicle_local_position{};
 
 	if (force_update) {
 		_vehicle_global_position_sub.copy(&vehicle_global_position);
-		_vehicle_local_position_sub.copy(&vehicle_local_position);
 
 	} else {
 		if (!_vehicle_global_position_sub.update(&vehicle_global_position)) {
-			return;
-		}
-
-		if (!_vehicle_local_position_sub.update(&vehicle_local_position)) {
 			return;
 		}
 	}
