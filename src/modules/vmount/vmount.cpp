@@ -211,6 +211,8 @@ static int vmount_thread_main(int argc, char *argv[])
 			control_data.compid_primary_control = 0;
 		}
 
+		InputBase::UpdateResult update_result = InputBase::UpdateResult::NoUpdate;
+
 		if (thread_data.input_objs_len > 0) {
 
 			// get input: we cannot make the timeout too large, because the output needs to update
@@ -223,7 +225,7 @@ static int vmount_thread_main(int argc, char *argv[])
 				const unsigned int poll_timeout =
 					(already_active || thread_data.last_input_active == -1) ? 20 : 0;
 
-				InputBase::UpdateResult update_result = thread_data.input_objs[i]->update(poll_timeout, control_data, already_active);
+				update_result = thread_data.input_objs[i]->update(poll_timeout, control_data, already_active);
 
 				switch (update_result) {
 				case InputBase::UpdateResult::NoUpdate:
@@ -263,7 +265,9 @@ static int vmount_thread_main(int argc, char *argv[])
 			}
 
 			// Update output
-			thread_data.output_obj->update(control_data);
+			thread_data.output_obj->update(
+				control_data,
+				update_result != InputBase::UpdateResult::NoUpdate);
 
 			// Only publish the mount orientation if the mode is not mavlink v1 or v2
 			// If the gimbal speaks mavlink it publishes its own orientation.

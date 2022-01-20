@@ -46,45 +46,47 @@ OutputMavlinkV1::OutputMavlinkV1(const Parameters &parameters)
 	: OutputBase(parameters)
 {}
 
-void OutputMavlinkV1::update(const ControlData &control_data)
+void OutputMavlinkV1::update(const ControlData &control_data, bool new_setpoints)
 {
 	vehicle_command_s vehicle_command{};
 	vehicle_command.timestamp = hrt_absolute_time();
 	vehicle_command.target_system = (uint8_t)_parameters.mnt_mav_sysid_v1;
 	vehicle_command.target_component = (uint8_t)_parameters.mnt_mav_compid_v1;
 
-	//got new command
-	_set_angle_setpoints(control_data);
+	if (new_setpoints) {
+		//got new command
+		_set_angle_setpoints(control_data);
 
-	const bool configuration_changed =
-		(control_data.type != _previous_control_data_type);
-	_previous_control_data_type = control_data.type;
+		const bool configuration_changed =
+			(control_data.type != _previous_control_data_type);
+		_previous_control_data_type = control_data.type;
 
-	if (configuration_changed) {
+		if (configuration_changed) {
 
-		vehicle_command.command = vehicle_command_s::VEHICLE_CMD_DO_MOUNT_CONFIGURE;
-		vehicle_command.timestamp = hrt_absolute_time();
+			vehicle_command.command = vehicle_command_s::VEHICLE_CMD_DO_MOUNT_CONFIGURE;
+			vehicle_command.timestamp = hrt_absolute_time();
 
-		if (control_data.type == ControlData::Type::Neutral) {
-			vehicle_command.param1 = vehicle_command_s::VEHICLE_MOUNT_MODE_NEUTRAL;
+			if (control_data.type == ControlData::Type::Neutral) {
+				vehicle_command.param1 = vehicle_command_s::VEHICLE_MOUNT_MODE_NEUTRAL;
 
-			vehicle_command.param5 = 0.0;
-			vehicle_command.param6 = 0.0;
-			vehicle_command.param7 = 0.0f;
+				vehicle_command.param5 = 0.0;
+				vehicle_command.param6 = 0.0;
+				vehicle_command.param7 = 0.0f;
 
-		} else {
-			vehicle_command.param1 = vehicle_command_s::VEHICLE_MOUNT_MODE_MAVLINK_TARGETING;
+			} else {
+				vehicle_command.param1 = vehicle_command_s::VEHICLE_MOUNT_MODE_MAVLINK_TARGETING;
 
-			vehicle_command.param5 = static_cast<double>(control_data.type_data.angle.frames[0]);
-			vehicle_command.param6 = static_cast<double>(control_data.type_data.angle.frames[1]);
-			vehicle_command.param7 = static_cast<float>(control_data.type_data.angle.frames[2]);
+				vehicle_command.param5 = static_cast<double>(control_data.type_data.angle.frames[0]);
+				vehicle_command.param6 = static_cast<double>(control_data.type_data.angle.frames[1]);
+				vehicle_command.param7 = static_cast<float>(control_data.type_data.angle.frames[2]);
+			}
+
+			vehicle_command.param2 = _stabilize[0] ? 1.0f : 0.0f;
+			vehicle_command.param3 = _stabilize[1] ? 1.0f : 0.0f;
+			vehicle_command.param4 = _stabilize[2] ? 1.0f : 0.0f;
+
+			_gimbal_v1_command_pub.publish(vehicle_command);
 		}
-
-		vehicle_command.param2 = _stabilize[0] ? 1.0f : 0.0f;
-		vehicle_command.param3 = _stabilize[1] ? 1.0f : 0.0f;
-		vehicle_command.param4 = _stabilize[2] ? 1.0f : 0.0f;
-
-		_gimbal_v1_command_pub.publish(vehicle_command);
 	}
 
 	_handle_position_update(control_data);
@@ -140,7 +142,7 @@ OutputMavlinkV2::OutputMavlinkV2(const Parameters &parameters)
 {
 }
 
-void OutputMavlinkV2::update(const ControlData &control_data)
+void OutputMavlinkV2::update(const ControlData &control_data, bool new_setpoints)
 {
 	_check_for_gimbal_device_information();
 
@@ -152,12 +154,14 @@ void OutputMavlinkV2::update(const ControlData &control_data)
 		_last_gimbal_device_checked = t;
 
 	} else {
-		//got new command
-		_set_angle_setpoints(control_data);
+		if (new_setpoints) {
+			//got new command
+			_set_angle_setpoints(control_data);
 
-		_handle_position_update(control_data);
-		_publish_gimbal_device_set_attitude();
-		_last_update = t;
+			_handle_position_update(control_data);
+			_publish_gimbal_device_set_attitude();
+			_last_update = t;
+		}
 	}
 }
 

@@ -48,10 +48,12 @@ OutputRC::OutputRC(const Parameters &parameters)
 {
 }
 
-void OutputRC::update(const ControlData &control_data)
+void OutputRC::update(const ControlData &control_data, bool new_setpoints)
 {
-	_retract_gimbal = control_data.gimbal_shutter_retract;
-	_set_angle_setpoints(control_data);
+	if (new_setpoints) {
+		_retract_gimbal = control_data.gimbal_shutter_retract;
+		_set_angle_setpoints(control_data);
+	}
 
 	_handle_position_update(control_data);
 
