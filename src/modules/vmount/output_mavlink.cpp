@@ -159,9 +159,9 @@ void OutputMavlinkV2::update(const ControlData &control_data, bool new_setpoints
 			_set_angle_setpoints(control_data);
 
 			_handle_position_update(control_data);
-			_publish_gimbal_device_set_attitude();
 			_last_update = t;
 		}
+		_publish_gimbal_device_set_attitude();
 	}
 }
 
