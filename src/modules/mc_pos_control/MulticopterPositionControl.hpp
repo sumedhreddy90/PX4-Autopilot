@@ -108,6 +108,9 @@ private:
 
 	hrt_abstime	_time_stamp_last_loop{0};		/**< time stamp of last loop iteration */
 
+	hrt_abstime _time_landing_ramp_started{0};
+	float _landing_az{0.f};
+
 	vehicle_local_position_setpoint_s _setpoint {};
 	vehicle_control_mode_s _vehicle_control_mode {};
 

@@ -424,12 +424,24 @@ void MulticopterPositionControl::Run()
 				const bool flying_but_ground_contact = (flying && _vehicle_land_detected.ground_contact);
 
 				if (not_taken_off || flying_but_ground_contact) {
+
+					if (_time_landing_ramp_started == 0) {
+						_time_landing_ramp_started = time_stamp_now;
+						_landing_az = states.acceleration(2);
+					}
+
+					// ramp up to high downwards acceleration to make sure there's no thrust
+					_landing_az = math::constrain(_landing_az + 1.f, 0.f, 100.f);
+
 					// we are not flying yet and need to avoid any corrections
 					reset_setpoint_to_nan(_setpoint);
-					Vector3f(0.f, 0.f, 100.f).copyTo(_setpoint.acceleration); // High downwards acceleration to make sure there's no thrust
+					Vector3f(0.f, 0.f, _landing_az).copyTo(_setpoint.acceleration);
 
 					// prevent any integrator windup
 					_control.resetIntegral();
+
+				} else {
+					_time_landing_ramp_started = 0;
 				}
 			}
 
