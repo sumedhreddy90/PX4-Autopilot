@@ -233,7 +233,7 @@ InputMavlinkCmdMount::update(unsigned int timeout_ms, ControlData &control_data,
 		}
 
 		// Keep going reading commands until timeout is up.
-		poll_timeout = (hrt_absolute_time() - poll_start) / 1000;
+		poll_timeout = timeout_ms - (hrt_absolute_time() - poll_start) / 1000;
 	}
 
 	return update_result;
@@ -574,7 +574,7 @@ InputMavlinkGimbalV2::update(unsigned int timeout_ms, ControlData &control_data,
 			update_result = _process_set_manual_control(control_data, set_manual_control);
 		}
 
-		poll_timeout = (hrt_absolute_time() - poll_start) / 1000;
+		poll_timeout = timeout_ms - (hrt_absolute_time() - poll_start) / 1000;
 	}
 
 	_stream_gimbal_manager_status(control_data);
