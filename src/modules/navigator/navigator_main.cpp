@@ -832,13 +832,13 @@ void Navigator::geofence_breach_check(bool &have_geofence_position_data)
 				vertical_test_point_distance);
 
 		gf_violation_type.fence_violation = !_geofence.isInsidePolygonOrCircle(fence_violation_test_point(0),
-				fence_violation_test_point(1),
-				_global_pos.alt);
+						    fence_violation_test_point(1),
+						    _global_pos.alt);
 
 
 		gf_violation_type.buffer_violation = _geofence.isInsideBufferZone(fence_violation_test_point(0),
-				fence_violation_test_point(1),
-				_global_pos.alt);
+						     fence_violation_test_point(1),
+						     _global_pos.alt);
 
 
 		_last_geofence_check = hrt_absolute_time();
@@ -1543,9 +1543,9 @@ void Navigator::release_gimbal_control()
 bool Navigator::geofence_allows_position(const vehicle_global_position_s &pos)
 {
 	if ((_geofence.getGeofenceAction() != geofence_result_s::GF_ACTION_NONE &&
-	    _geofence.getGeofenceAction() != geofence_result_s::GF_ACTION_WARN) ||
+	     _geofence.getGeofenceAction() != geofence_result_s::GF_ACTION_WARN) ||
 	    (_geofence.getGeofenceBufferAction() != geofence_result_s::GF_ACTION_NONE &&
-	    _geofence.getGeofenceBufferAction() != geofence_result_s::GF_ACTION_WARN)) {
+	     _geofence.getGeofenceBufferAction() != geofence_result_s::GF_ACTION_WARN)) {
 
 		if (PX4_ISFINITE(pos.lat) && PX4_ISFINITE(pos.lon)) {
 			return _geofence.check(pos, _gps_pos, _home_pos,

@@ -232,6 +232,9 @@ private:
 		(ParamInt<px4::params::GF_SOURCE>)         _param_gf_source,
 		(ParamInt<px4::params::GF_COUNT>)          _param_gf_count,
 		(ParamFloat<px4::params::GF_MAX_HOR_DIST>) _param_gf_max_hor_dist,
-		(ParamFloat<px4::params::GF_MAX_VER_DIST>) _param_gf_max_ver_dist
+		(ParamFloat<px4::params::GF_MAX_VER_DIST>) _param_gf_max_ver_dist,
+		(ParamInt<px4::params::GF_BUFFER_ACTION>)  _param_gf_buffer_action,
+		(ParamFloat<px4::params::GF_BUFFER_DIST>)  _param_gf_buffer_dist,
+		(ParamBool<px4::params::GF_PREDICT>)       _param_gf_predict
 	)
 };
