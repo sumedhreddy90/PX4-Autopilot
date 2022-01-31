@@ -907,20 +907,24 @@ FixedwingPositionControl::control_auto(const hrt_abstime &now, const Vector2d &c
 
 	Vector2f curr_pos_local{_local_pos.x, _local_pos.y};
 
-	if (_param_fw_use_npfg.get()) {
-		Vector2f path_point_sp(path_sp.x, path_sp.y);
-		Vector2f unit_path_tangent(path_sp.vx, path_sp.vy);
-		float curvature = path_sp.curvature;
-		_npfg.navigatePathTangent(curr_pos_local, path_point_sp, unit_path_tangent, get_nav_speed_2d(ground_speed), _wind_vel,
-					  curvature);
+	if (position_sp_type != position_setpoint_s::SETPOINT_TYPE_LOITER
+	    && position_sp_type != position_setpoint_s::SETPOINT_TYPE_TAKEOFF) {
 
-		_att_sp.roll_body = _npfg.getRollSetpoint();
+		if (_param_fw_use_npfg.get()) {
+			Vector2f path_point_sp(path_sp.x, path_sp.y);
+			Vector2f unit_path_tangent(path_sp.vx, path_sp.vy);
+			float curvature = path_sp.curvature;
+			_npfg.navigatePathTangent(curr_pos_local, path_point_sp, unit_path_tangent, get_nav_speed_2d(ground_speed), _wind_vel,
+						  curvature);
 
-	} else {
-		Vector2f curr_wp(path_sp.x, path_sp.y);
-		Vector2f prev_wp{path_sp.prev_wp};
-		_l1_control.navigate_waypoints(prev_wp, curr_wp, curr_pos_local, get_nav_speed_2d(ground_speed));
-		_att_sp.roll_body = _l1_control.get_roll_setpoint();
+			_att_sp.roll_body = _npfg.getRollSetpoint();
+
+		} else {
+			Vector2f curr_wp(path_sp.x, path_sp.y);
+			Vector2f prev_wp{path_sp.prev_wp};
+			_l1_control.navigate_waypoints(prev_wp, curr_wp, curr_pos_local, get_nav_speed_2d(ground_speed));
+			_att_sp.roll_body = _l1_control.get_roll_setpoint();
+		}
 	}
 
 	/* reset landing state */
