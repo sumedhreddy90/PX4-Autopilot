@@ -48,7 +48,6 @@
 #include <uORB/topics/position_setpoint_triplet.h>
 #include <uORB/topics/vehicle_command.h>
 #include <uORB/topics/vehicle_roi.h>
-#include <uORB/topics/vehicle_global_position.h>
 #include <lib/geo/geo.h>
 
 
@@ -126,7 +125,6 @@ private:
 	int _vehicle_command_sub = -1;
 
 	uORB::Subscription _gimbal_device_attitude_status_sub{ORB_ID(gimbal_device_attitude_status)};
-	uORB::Subscription _vehicle_global_position_sub{ORB_ID(vehicle_global_position)};
 	uORB::Publication<gimbal_manager_information_s> _gimbal_manager_info_pub{ORB_ID(gimbal_manager_information)};
 	uORB::Publication<gimbal_manager_status_s> _gimbal_manager_status_pub{ORB_ID(gimbal_manager_status)};
 	uint8_t _cur_roi_mode = vehicle_roi_s::ROI_NONE;
