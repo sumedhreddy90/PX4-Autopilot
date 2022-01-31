@@ -151,7 +151,9 @@ void OutputBase::_handle_position_update(const ControlData &control_data, bool f
 	const double &lon = control_data.type_data.lonlat.lon;
 	const float &alt = control_data.type_data.lonlat.altitude;
 
-	float roll = control_data.type_data.lonlat.roll_offset;
+	float roll = PX4_ISFINITE(control_data.type_data.lonlat.roll_offset)
+		     ? control_data.type_data.lonlat.roll_offset
+		     : 0.0f;
 
 	// interface: use fixed pitch value > -pi otherwise consider ROI altitude
 	float pitch = (control_data.type_data.lonlat.pitch_fixed_angle >= -M_PI_F) ?
@@ -163,8 +165,13 @@ void OutputBase::_handle_position_update(const ControlData &control_data, bool f
 	_absolute_angle[2] = true;
 
 	// add offsets from VEHICLE_CMD_DO_SET_ROI_WPNEXT_OFFSET
-	pitch += control_data.type_data.lonlat.pitch_offset;
-	yaw += control_data.type_data.lonlat.yaw_offset;
+	if (PX4_ISFINITE(control_data.type_data.lonlat.pitch_offset)) {
+		pitch += control_data.type_data.lonlat.pitch_offset;
+	}
+
+	if (PX4_ISFINITE(control_data.type_data.lonlat.yaw_offset)) {
+		yaw += control_data.type_data.lonlat.yaw_offset;
+	}
 
 	matrix::Quatf(matrix::Eulerf(roll, pitch, yaw)).copyTo(_q_setpoint);
 
