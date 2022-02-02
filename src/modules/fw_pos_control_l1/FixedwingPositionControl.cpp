@@ -893,7 +893,7 @@ FixedwingPositionControl::control_auto(const hrt_abstime &now, const Vector2d &c
 		break;
 
 	case position_setpoint_s::SETPOINT_TYPE_LOITER:
-		control_auto_loiter(now, dt, curr_pos, ground_speed, pos_sp_prev, current_sp, pos_sp_next);
+		path_sp = control_auto_loiter(now, dt, curr_pos, ground_speed, pos_sp_prev, current_sp, pos_sp_next);
 		break;
 
 	case position_setpoint_s::SETPOINT_TYPE_LAND:
@@ -907,8 +907,8 @@ FixedwingPositionControl::control_auto(const hrt_abstime &now, const Vector2d &c
 
 	Vector2f curr_pos_local{_local_pos.x, _local_pos.y};
 
-	if (position_sp_type != position_setpoint_s::SETPOINT_TYPE_LOITER
-	    && position_sp_type != position_setpoint_s::SETPOINT_TYPE_TAKEOFF) {
+	if (position_sp_type != position_setpoint_s::SETPOINT_TYPE_TAKEOFF
+	    && position_sp_type != position_setpoint_s::SETPOINT_TYPE_LAND) {
 
 		if (_param_fw_use_npfg.get()) {
 			Vector2f path_point_sp(path_sp.x, path_sp.y);
@@ -922,7 +922,16 @@ FixedwingPositionControl::control_auto(const hrt_abstime &now, const Vector2d &c
 		} else {
 			Vector2f curr_wp(path_sp.x, path_sp.y);
 			Vector2f prev_wp{path_sp.prev_wp};
-			_l1_control.navigate_waypoints(prev_wp, curr_wp, curr_pos_local, get_nav_speed_2d(ground_speed));
+
+			if (fabsf(path_sp.curvature) > FLT_EPSILON) {
+				uint8_t loiter_direction = (path_sp.curvature > 0) ? 1 : -1;
+				_l1_control.navigate_loiter(prev_wp, curr_pos, 1.0f / path_sp.curvature, loiter_direction,
+							    get_nav_speed_2d(ground_speed));
+
+			} else {
+				_l1_control.navigate_waypoints(prev_wp, curr_wp, curr_pos_local, get_nav_speed_2d(ground_speed));
+			}
+
 			_att_sp.roll_body = _l1_control.get_roll_setpoint();
 		}
 	}
@@ -1323,7 +1332,7 @@ FixedwingPositionControl::control_auto_velocity(const hrt_abstime &now, const fl
 	return setpoint;
 }
 
-void
+vehicle_local_path_setpoint_s
 FixedwingPositionControl::control_auto_loiter(const hrt_abstime &now, const float dt, const Vector2d &curr_pos,
 		const Vector2f &ground_speed, const position_setpoint_s &pos_sp_prev, const position_setpoint_s &pos_sp_curr,
 		const position_setpoint_s &pos_sp_next)
@@ -1409,9 +1418,6 @@ FixedwingPositionControl::control_auto_loiter(const hrt_abstime &now, const floa
 		_att_sp.roll_body = _npfg.getRollSetpoint();
 		target_airspeed = _npfg.getAirspeedRef() / _eas2tas;
 
-	} else {
-		_l1_control.navigate_loiter(curr_wp, curr_pos, loiter_radius, loiter_direction, get_nav_speed_2d(ground_speed));
-		_att_sp.roll_body = _l1_control.get_roll_setpoint();
 	}
 
 	_att_sp.yaw_body = _yaw; // yaw is not controlled, so set setpoint to current yaw
@@ -1445,6 +1451,19 @@ FixedwingPositionControl::control_auto_loiter(const hrt_abstime &now, const floa
 				   tecs_fw_mission_throttle,
 				   false,
 				   radians(_param_fw_p_lim_min.get()));
+
+	vehicle_local_path_setpoint_s setpoint;
+	setpoint.x = NAN;
+	setpoint.y = NAN;
+	setpoint.z = NAN;
+	setpoint.vx = NAN;
+	setpoint.vy = NAN;
+	setpoint.vz = NAN;
+	Vector2f curr_wp_local = _global_local_proj_ref.project(curr_wp(0), curr_wp(1));
+	curr_wp_local.copyTo(setpoint.prev_wp);
+	setpoint.airspeed = target_airspeed;
+	setpoint.curvature = PX4_ISFINITE(loiter_radius) ? 1 / loiter_radius : 0.0f;
+	return setpoint;
 }
 
 void
