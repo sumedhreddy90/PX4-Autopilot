@@ -150,7 +150,6 @@ static int vmount_thread_main(int argc, char *argv[])
 	}
 
 	if (alloc_failed) {
-		thread_data.input_objs_len = 0;
 		PX4_ERR("input objs memory allocation failed");
 		thread_should_exit.store(true);
 	}
