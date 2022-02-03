@@ -379,14 +379,25 @@ private:
 	uint64_t _time_last_hor_vel_fuse{0};	///< time the last fusion of horizontal velocity measurements was performed (uSec)
 	uint64_t _time_last_ver_vel_fuse{0};	///< time the last fusion of verticalvelocity measurements was performed (uSec)
 	uint64_t _time_last_delpos_fuse{0};	///< time the last fusion of incremental horizontal position measurements was performed (uSec)
+
+
+	uint64_t _time_last_ev_pos_fuse{0};
+	uint64_t _time_last_ev_vel_fuse{0};
+	uint64_t _time_last_ev_yaw_fuse{0};
+
 	uint64_t _time_last_of_fuse{0};		///< time the last fusion of optical flow measurements were performed (uSec)
 	uint64_t _time_last_flow_terrain_fuse{0}; ///< time the last fusion of optical flow measurements for terrain estimation were performed (uSec)
 	uint64_t _time_last_arsp_fuse{0};	///< time the last fusion of airspeed measurements were performed (uSec)
 	uint64_t _time_last_beta_fuse{0};	///< time the last fusion of synthetic sideslip measurements were performed (uSec)
 	uint64_t _time_last_fake_pos_fuse{0};	///< last time we faked position measurements to constrain tilt errors during operation without external aiding (uSec)
 	uint64_t _time_last_gps_yaw_fuse{0};	///< time the last fusion of GPS yaw measurements were performed (uSec)
+
 	uint64_t _time_last_gps_yaw_data{0};	///< time the last GPS yaw measurement was available (uSec)
+
 	uint8_t _nb_gps_yaw_reset_available{0}; ///< remaining number of resets allowed before switching to another aiding source
+	uint8_t _nb_ev_pos_reset_available{0};
+	uint8_t _nb_ev_vel_reset_available{0};
+	uint8_t _nb_ev_yaw_reset_available{0};
 
 	Vector2f _last_known_posNE{};		///< last known local NE position vector (m)
 
@@ -582,20 +593,20 @@ private:
 	// yaw : angle observation defined as the first rotation in a 321 Tait-Bryan rotation sequence (rad)
 	// yaw_variance : variance of the yaw angle observation (rad^2)
 	// zero_innovation : Fuse data with innovation set to zero
-	void fuseYaw321(const float yaw, const float yaw_variance, bool zero_innovation = false);
+	bool fuseYaw321(const float yaw, const float yaw_variance, bool zero_innovation = false);
 
 	// fuse the yaw angle defined as the first rotation in a 312 Tait-Bryan rotation sequence
 	// yaw : angle observation defined as the first rotation in a 312 Tait-Bryan rotation sequence (rad)
 	// yaw_variance : variance of the yaw angle observation (rad^2)
 	// zero_innovation : Fuse data with innovation set to zero
-	void fuseYaw312(const float yaw, const float yaw_variance, bool zero_innovation = false);
+	bool fuseYaw312(const float yaw, const float yaw_variance, bool zero_innovation = false);
 
 	// update quaternion states and covariances using an innovation, observation variance and Jacobian vector
 	// innovation : prediction - measurement
 	// variance : observaton variance
 	// gate_sigma : innovation consistency check gate size (Sigma)
 	// jacobian : 4x1 vector of partial derivatives of observation wrt each quaternion state
-	void updateQuaternion(const float innovation, const float variance, const float gate_sigma,
+	bool updateQuaternion(const float innovation, const float variance, const float gate_sigma,
 			      const Vector4f &yaw_jacobian);
 
 	// fuse the yaw angle obtained from a dual antenna GPS unit
@@ -627,7 +638,7 @@ private:
 	void fuseEvHgt();
 
 	// fuse single velocity and position measurement
-	void fuseVelPosHeight(const float innov, const float innov_var, const int obs_index);
+	bool fuseVelPosHeight(const float innov, const float innov_var, const int obs_index);
 
 	void resetVelocity();
 
@@ -711,9 +722,6 @@ private:
 
 	// modify output filter to match the the EKF state at the fusion time horizon
 	void alignOutputFilter();
-
-	// update the rotation matrix which transforms EV navigation frame measurements into NED
-	void calcExtVisRotMat();
 
 	Vector3f getVisionVelocityInEkfFrame() const;
 
@@ -807,6 +815,9 @@ private:
 
 	// control fusion of external vision observations
 	void controlExternalVisionFusion();
+	void controlEvPosFusion();
+	void controlEvVelFusion();
+	void controlEvYawFusion();
 
 	// control fusion of optical flow observations
 	void controlOpticalFlowFusion();
@@ -997,6 +1008,10 @@ private:
 	void stopEvPosFusion();
 	void stopEvVelFusion();
 	void stopEvYawFusion();
+
+	void fuseEvPosition();
+	void fuseEvVelocity();
+	void fuseEvYaw();
 
 	void stopAuxVelFusion();
 

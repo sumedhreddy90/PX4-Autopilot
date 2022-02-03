@@ -1456,14 +1456,6 @@ Vector3f Ekf::getVisionVelocityVarianceInEkfFrame() const
 	return ev_vel_cov.diag();
 }
 
-// update the rotation matrix which rotates EV measurements into the EKF's navigation frame
-void Ekf::calcExtVisRotMat()
-{
-	// Calculate the quaternion delta that rotates from the EV to the EKF reference frame at the EKF fusion time horizon.
-	const Quatf q_error((_state.quat_nominal * _ev_sample_delayed.quat.inversed()).normalized());
-	_R_ev_to_ekf = Dcmf(q_error);
-}
-
 // Increase the yaw error variance of the quaternions
 // Argument is additional yaw variance in rad**2
 void Ekf::increaseQuatYawErrVariance(float yaw_variance)
@@ -1614,63 +1606,6 @@ void Ekf::startGpsYawFusion()
 void Ekf::stopGpsYawFusion()
 {
 	_control_status.flags.gps_yaw = false;
-}
-
-void Ekf::startEvPosFusion()
-{
-	_control_status.flags.ev_pos = true;
-	resetHorizontalPosition();
-	_information_events.flags.starting_vision_pos_fusion = true;
-	ECL_INFO("starting vision pos fusion");
-}
-
-void Ekf::startEvVelFusion()
-{
-	_control_status.flags.ev_vel = true;
-	resetVelocity();
-	_information_events.flags.starting_vision_vel_fusion = true;
-	ECL_INFO("starting vision vel fusion");
-}
-
-void Ekf::startEvYawFusion()
-{
-	// turn on fusion of external vision yaw measurements and disable all magnetometer fusion
-	_control_status.flags.ev_yaw = true;
-	_control_status.flags.mag_dec = false;
-
-	stopMagHdgFusion();
-	stopMag3DFusion();
-
-	_information_events.flags.starting_vision_yaw_fusion = true;
-	ECL_INFO("starting vision yaw fusion");
-}
-
-void Ekf::stopEvFusion()
-{
-	stopEvPosFusion();
-	stopEvVelFusion();
-	stopEvYawFusion();
-}
-
-void Ekf::stopEvPosFusion()
-{
-	_control_status.flags.ev_pos = false;
-	_ev_pos_innov.setZero();
-	_ev_pos_innov_var.setZero();
-	_ev_pos_test_ratio.setZero();
-}
-
-void Ekf::stopEvVelFusion()
-{
-	_control_status.flags.ev_vel = false;
-	_ev_vel_innov.setZero();
-	_ev_vel_innov_var.setZero();
-	_ev_vel_test_ratio.setZero();
-}
-
-void Ekf::stopEvYawFusion()
-{
-	_control_status.flags.ev_yaw = false;
 }
 
 void Ekf::stopAuxVelFusion()
