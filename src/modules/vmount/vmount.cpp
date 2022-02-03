@@ -154,10 +154,12 @@ static int vmount_thread_main(int argc, char *argv[])
 		thread_should_exit.store(true);
 	}
 
-	for (int i = 0; i < thread_data.input_objs_len; ++i) {
-		if (thread_data.input_objs[i]->initialize() != 0) {
-			PX4_ERR("Input %d failed\n", i);
-			thread_should_exit.store(true);
+	if (!alloc_failed) {
+		for (int i = 0; i < thread_data.input_objs_len; ++i) {
+			if (thread_data.input_objs[i]->initialize() != 0) {
+				PX4_ERR("Input %d failed", i);
+				thread_should_exit.store(true);
+			}
 		}
 	}
 
